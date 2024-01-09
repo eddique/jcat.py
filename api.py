@@ -3,25 +3,30 @@ import json
 import csv
 from tqdm import tqdm
 
-def generate_report(project, days):
+def generate_report(project: str, days: int, jql: str):
     print(f"Fetching {project} issues in the last {days} days...")
-    jira_issues = jira.get_issues(project, days)
+    jira_issues = jira.get_issues(project, days, jql)
     issues = jira.parse_issues(jira_issues)
 
-    samples = [i["conversation"] for i in issues[:10]]
+    samples = [i["conversation"] for i in issues[:100]]
     samples = "Issue: \n".join(samples)
+
     print("Creating categories...")
     categories = llm.get_categories(samples)
 
     print("Classifying issues...")
     rows = []
-    for issue in tqdm(issues[:10]):
-        res = llm.classify(issue["conversation"], categories)
-        data = json.loads(res)
-        key = issue["key"]
-        category = data["category"]
-        subcategory = data["subcategory"]
-        rows.append([key, issue["summary"], category, subcategory])
+    for issue in tqdm(issues):
+        try:
+            res = llm.classify(issue["conversation"], categories)
+            data = json.loads(res)
+            key = issue["key"]
+            category = data["category"]
+            subcategory = data["subcategory"]
+            rows.append([key, issue["summary"], category, subcategory])
+        except Exception as e:
+            print(e)
+            continue
 
     print("Writing to csv...")
     with open("output.csv", mode="w", encoding="utf-8") as csv_file:
