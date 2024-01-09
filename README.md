@@ -10,7 +10,7 @@ python cli.py --project IT
 ```sh
 python cli.py --project IT --days 10
 ```
-- Queries the IT Jira project key for issues in the last 10 days and categorizes issues.
+- Queries with custom JQL and categorizes issues.
 ```sh
-python cli.py --project IT --days 10
+python cli.py --jql "project = IT AND assignee = 'eric.rodriguez@gusto.com'"
 ```
