@@ -1,6 +1,13 @@
 # JCAT Py
 A Python script to query Jira issues, create categories, and classify each issue into a category, then generate CSVs from the data.
 
+## Secrets
+Export the following values in your terminal session before running jcat.py
+```sh
+export JIRA_API_KEY=<Your Jira API Key> \
+export OPENAI_API_KEY=<Your OpenAI API Key>
+```
+
 ## Usage
 - Queries the IT Jira project for issues in the last 90 days and categorizes issues.
 ```sh

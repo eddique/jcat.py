@@ -1,6 +1,8 @@
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+from tqdm import tqdm
+import json
 
 load_dotenv()
 
@@ -8,7 +10,7 @@ client = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY")
 )
 
-def get_categories(sample):
+def generate_categories(sample):
     prompt = f"""
         The following are random samples from a JIRA project. Please create
         classifications for the category these issues could fall into, and
@@ -41,5 +43,20 @@ def classify(issue, categories):
         model="gpt-4-32k",
         messages=[{"role": "system", "content": prompt}]
     )
-    print(completion.choices[0].message.content)
     return completion.choices[0].message.content
+
+def generate_classifications(issues: list[dict], categories: str) -> list[dict]:
+    rows = []
+    for i, issue in tqdm(enumerate(issues), desc="Processing Issues", total=len(issues)):
+        try:
+            res = classify(issue["conversation"], categories)
+            data = json.loads(res)
+            key = issue["key"]
+            category = data["category"]
+            subcategory = data["subcategory"]
+            print(f"{i+1}. {key} - {category} | {subcategory}")
+            rows.append([key, issue["summary"], category, subcategory])
+        except Exception as e:
+            print(e)
+            continue
+    return rows

@@ -13,7 +13,7 @@ issues = jira.parse_issues(jira_issues)
 samples = [i["conversation"] for i in issues[:100]]
 samples = "Issue: \n".join(samples)
 print("Creating categories...")
-categories = llm.get_categories(samples)
+categories = llm.generate_categories(samples)
 
 print("Classifying issues...")
 rows = []

@@ -26,7 +26,7 @@ def fetch_issues(issues: list[dict], jql: str = "", start_at: int = 0, count: in
         "maxResults": 10000,
         "startAt": start_at
     }
-    print(f"fetching issues page {count+1}")
+    print(f"Fetching issues page {count+1}...")
     try:
         r = requests.post(url, headers=headers, json=data)
         payload = r.json()
@@ -60,6 +60,7 @@ def parse_issues(issues):
             issue["conversation"] += "User: " + comment["body"] + "\n"
         prompt.append(issue)
     return prompt
+
 def format_date(subtract_days):
     today = datetime.today()
 
