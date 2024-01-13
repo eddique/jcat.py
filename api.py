@@ -1,14 +1,17 @@
-from lib import jira, llm
+from lib import jira, llm, csv
 import json
-import csv
 from tqdm import tqdm
 
 def generate_report(project: str, days: int, jql: str):
     print(f"Fetching {project} issues in the last {days} days...")
-    jira_issues = jira.get_issues(project, days, jql)
+    jql = jql if jql != "" else f"project = {project} AND createdDate >= {jira.format_date(days)} ORDER BY createdDate DESC"
+    print(f"Query: {jql}")
+    jira_issues = []
+    jira.fetch_issues(jira_issues, jql)
+    print(f"Issues {len(jira_issues)}")
     issues = jira.parse_issues(jira_issues)
 
-    samples = [i["conversation"] for i in issues[:100]]
+    samples = [i["conversation"] for i in issues[:50]]
     samples = "Issue: \n".join(samples)
 
     print("Creating categories...")
@@ -16,7 +19,7 @@ def generate_report(project: str, days: int, jql: str):
 
     print("Classifying issues...")
     rows = []
-    for issue in tqdm(issues):
+    for issue in tqdm(issues[:100]):
         try:
             res = llm.classify(issue["conversation"], categories)
             data = json.loads(res)
@@ -29,26 +32,6 @@ def generate_report(project: str, days: int, jql: str):
             continue
 
     print("Writing to csv...")
-    with open("output.csv", mode="w", encoding="utf-8") as csv_file:
-        writer = csv.writer(csv_file)
-        writer.writerow(["key", "summary", "category", "subcategory"])
-        for row in tqdm(rows):
-            writer.writerow([row[0], row[1], row[2], row[3]])
+    csv.generate_issues_report(rows)
 
-    breakdown = {}
-    for row in rows:
-        #BAD!
-        if row[2] in breakdown:
-            if row[3] in breakdown[row[2]]:
-                breakdown[row[2]][row[3]] += 1
-            else:
-                breakdown[row[2]][row[3]] = 1
-        else:
-            breakdown[row[2]] = {}
-            breakdown[row[2]][row[3]] = 1
-    with open("stats.csv", mode="w", encoding="utf-8") as csv_file:
-        writer = csv.writer(csv_file)
-        writer.writerow(["category", "subcategory", "count"])
-        for k, v in breakdown.items():
-            for key, value in v.items():
-                writer.writerow([k, key, value])
+    csv.generate_stats_report()

@@ -6,8 +6,7 @@ from tqdm import tqdm
 
 load_dotenv()
 
-def get_issues(project: str, days: int, jql: str = "") -> list[dict]:
-    jql = jql if jql != "" else f"project = {project} AND createdDate >= {format_date(days)} ORDER BY createdDate DESC"
+def fetch_issues(issues: list[dict], jql: str = "", start_at: int = 0, count: int = 0):
     url = "https://jira.gustocorp.com/rest/api/2/search"
     headers = {
         "Authorization": "Bearer " + os.getenv("JIRA_API_KEY") ,
@@ -24,17 +23,23 @@ def get_issues(project: str, days: int, jql: str = "") -> list[dict]:
             "comment"
         ],
         "jql": jql,
-        "maxResults": 1000
+        "maxResults": 10000,
+        "startAt": start_at
     }
-
+    print(f"fetching issues page {count+1}")
     try:
         r = requests.post(url, headers=headers, json=data)
         payload = r.json()
-        print(payload["startAt"])
-        print(payload["total"])
-        return payload["issues"]
+        start = payload["startAt"]
+        total = payload["total"]
+        max = payload["maxResults"]
+        issues.extend(payload["issues"])
+        if start + max < total:
+            fetch_issues(issues, jql, (start + max), count+1)
+
     except Exception as e:
-        print(e)
+        print(e)    
+
 def parse_issues(issues):
     prompt = []
     for i in tqdm(issues):

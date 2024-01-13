@@ -33,7 +33,7 @@ def classify(issue, categories):
         
         return a JSON object with the keys "category" and "subcategory", 
         importantly, do not explain why just return one JSON object and make sure it's one of the
-        categories/subcategories.
+        categories/subcategories and ONLY one.
         
         {issue}
     """
