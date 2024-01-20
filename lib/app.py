@@ -1,6 +1,4 @@
 from lib import jira, llm, csv
-import json
-from tqdm import tqdm
 
 def generate_report(project: str, days: int, jql: str):
     jql = jql if jql != "" else f"project = {project} AND createdDate >= {jira.format_date(days)} ORDER BY createdDate DESC"
